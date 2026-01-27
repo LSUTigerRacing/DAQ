@@ -16,22 +16,23 @@ Install Before Proceeding:
 ---
 
 ## 2. Start TimescaleDB Instance 
-Command: docker compose up -d
+
+1. Start docker
+2. Navigate to repo in file directory in terminal
+3. Run: docker compose up -d
 
 ---
 
 ## 3. Verify Database Connection 
 
-Command: docker exec -it lsu-fsae-timescaledb psql -U fsae -d daq_data -c "SELECT 1;"
-
-You should see a table with '1' in it.
+1.  Run : docker exec -it lsu-fsae-timescaledb psql -U fsae -d daq_data -c "SELECT 1;"
+    You should see a table with 1 row in it.
 
 ---
 
 ## 4. Setup is Complete
 
 You are now ready to:
-
 
 1. Parse DAQ JSON payloads
 2. Write ingestion scripts
