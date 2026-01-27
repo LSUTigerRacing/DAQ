@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  timescaledb:
+    image: timescale/timescaledb:latest-pg14
+    container_name: lsu-fsae-timescaledb
+    environment:
+      POSTGRES_USER: fsae
+      POSTGRES_PASSWORD: fsae2026
+      POSTGRES_DB: daq_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+
+volumes:
+  timescale_data:
