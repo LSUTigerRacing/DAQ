@@ -1,0 +1,15 @@
+sensor_name,description,data_type,unit,min_range,max_range,sample_value
+engine_rpm,Engine rotational speed,integer,RPM,0,14000,8500
+throttle_position,Throttle pedal position,float,%,0.0,100.0,87.5
+brake_pressure,Brake line pressure,float,PSI,0.0,2000.0,850.3
+coolant_temp,Engine coolant temperature,float,°C,20.0,120.0,92.3
+oil_pressure,Engine oil pressure,float,PSI,0.0,100.0,65.2
+intake_air_temp,Intake manifold air temperature,float,°C,-10.0,80.0,35.4
+battery_voltage,Main battery voltage,float,V,10.0,15.0,13.8
+speed_fl,Front left wheel speed,float,m/s,0.0,45.0,18.2
+speed_fr,Front right wheel speed,float,m/s,0.0,45.0,18.3
+speed_rl,Rear left wheel speed,float,m/s,0.0,45.0,18.1
+speed_rr,Rear right wheel speed,float,m/s,0.0,45.0,18.2
+steering_angle,Steering wheel angle,float,degrees,-540.0,540.0,-45.2
+accel_lateral,Lateral G-force (left/right),float,G,-3.0,3.0,1.24
+accel_longitudinal,Longitudinal G-force (forward/back),float,G,-3.0,3.0,0.85
