@@ -1,0 +1,26 @@
+{
+  "timestamp": "2022-02-04T14:24:12.456Z",
+  "session_id": "auto_20220204_142000",
+  "vehicle_id": "FSAE_2022_001",
+  "sensors": {
+    "engine_rpm": 4200,
+    "throttle_position": 0.0,
+    "brake_pressure": 1850.7,
+    "coolant_temp": 94.1,
+    "oil_pressure": 58.3,
+    "intake_air_temp": 38.2,
+    "battery_voltage": 13.6,
+    "speed_fl": 8.5,
+    "speed_fr": 8.4,
+    "speed_rl": 8.6,
+    "speed_rr": 8.5,
+    "steering_angle": 12.8,
+    "accel_lateral": -0.15,
+    "accel_longitudinal": -2.45
+  },
+  "telemetry_metadata": {
+    "packet_id": "pkt_1707058424456",
+    "sample_rate_hz": 100,
+    "daq_version": "v2.1.3"
+  }
+}
