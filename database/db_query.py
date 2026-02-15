@@ -37,7 +37,7 @@ def verify_insertion(conn, timestamp, table_name='data'):
 
     try:
         with conn.cursor() as cur:
-            cur.execute(query,(timestamp)) #execute expects tuple/list
+            cur.execute(query,(timestamp,)) #execute expects tuple/list
             if cur.fetchone():
                 return True
     except Exception as e:
