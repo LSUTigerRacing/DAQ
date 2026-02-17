@@ -1,6 +1,6 @@
-import psycopg
-import psycopg_pool
-from dataclasses import dataclass, asdict
+from psycopg import connect, Connection, OperationalError
+from psycopg_pool import ConnectionPool
+from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class TimescaleConfig:
@@ -14,47 +14,49 @@ class TimescaleConfig:
 
 DB_CONFIG = TimescaleConfig()
 
-def get_connection() -> psycopg.Connection | None:
+def get_connection() -> Connection | None:
     try:
-        conn = psycopg.connect(DB_CONFIG.to_str())
-        print("Connection successfully established")
+        conn = connect(DB_CONFIG.to_str())
+        #print("Connection successfully established")
         return conn
-    except psycopg.OperationalError as e:
+    except OperationalError as e:
         print(f'psycopg error: {e}')
         if 'Is the server running on that host and accepting TCP/IP connections?' in str(e):
             print('\nIs docker running/connected?')
         return None
 
-def get_connection_pool() -> psycopg_pool.ConnectionPool | None:
+def get_connection_pool(min_size: int = 1, max_size: int = 10) -> ConnectionPool | None:
     try:
-        pool = psycopg_pool.ConnectionPool(DB_CONFIG.to_str())
-        print("Connection Pool created")
+        pool = ConnectionPool(DB_CONFIG.to_str(), min_size=min_size, max_size=max_size)
+        #print("Connection Pool created")
         return pool
-    except psycopg.OperationalError as e:
+    except OperationalError as e:
         print(f'psycopg error: {e}')
         if 'Is the server running on that host and accepting TCP/IP connections?' in str(e):
             print('\nIs docker running/connected?')
         return None
 
-def close_connection(conn: psycopg.Connection | None):
+def close_connection(conn: Connection | None):
     if conn is None:
         print('Connection not found')
         return
+
     conn.close()
-    print('Connection closed')
+    #print('Connection closed')
 
 def test_connection() -> bool:
-    print('Establishing Connection')
+    print('Testing Connection ...')
     conn = get_connection()
     if conn is None:
             print('Connection failed')
             return False
+        
     try:
-        print('Running SELECT 1')
+        #print('Running SELECT 1')
         conn.execute("SELECT 1")
         close_connection(conn)
         print('Connection accessible')
         return True
-    except psycopg.Error as e:
+    except OperationalError as e:
         print(f"psycopg error: {e}", "Connection failed")
         return False
