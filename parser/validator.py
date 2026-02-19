@@ -1,8 +1,8 @@
 """
-JSON Payload Validator Module
+JSON Payload Validator Module for Formula SAE Racing Telemetry
 
-This module provides validation functions for JSON payloads in the data pipeline.
-It validates payload structure, sensor data, and metadata fields.
+This module provides validation functions for JSON payloads containing
+Formula SAE racing car telemetry data before entering the data pipeline.
 """
 
 import json
@@ -42,10 +42,10 @@ def validate_timestamp(timestamp_str: str) -> Tuple[bool, str]:
 
 def validate_sensors(sensor_data: Any) -> Tuple[bool, List[str]]:
     """
-    Validate sensor readings data.
+    Validate racing sensor readings data.
     
     Args:
-        sensor_data: Sensor data to validate (expected to be a list of sensor readings)
+        sensor_data: Sensor data dictionary to validate
         
     Returns:
         Tuple of (is_valid, list_of_error_messages)
@@ -57,83 +57,71 @@ def validate_sensors(sensor_data: Any) -> Tuple[bool, List[str]]:
         errors.append("Sensor data is missing")
         return False, errors
     
-    # Check if sensor_data is a list
-    if not isinstance(sensor_data, list):
-        errors.append(f"Sensor data must be a list, got {type(sensor_data).__name__}")
+    # Check if sensor_data is a dictionary
+    if not isinstance(sensor_data, dict):
+        errors.append(f"Sensor data must be a dictionary, got {type(sensor_data).__name__}")
         return False, errors
     
-    # Check if list is not empty
-    if len(sensor_data) == 0:
-        errors.append("Sensor data list cannot be empty")
-        return False, errors
+    # Define required sensor fields for FSAE telemetry
+    required_fields = [
+        'engine_rpm',
+        'throttle_position',
+        'brake_pressure',
+        'coolant_temp',
+        'oil_pressure',
+        'intake_air_temp',
+        'battery_voltage',
+        'speed_fl',
+        'speed_fr',
+        'speed_rl',
+        'speed_rr',
+        'steering_angle',
+        'accel_lateral',
+        'accel_longitudinal'
+    ]
     
-    # Validate each sensor reading
-    for idx, sensor in enumerate(sensor_data):
-        if not isinstance(sensor, dict):
-            errors.append(f"Sensor at index {idx} must be a dictionary, got {type(sensor).__name__}")
-            continue
-        
-        # Required fields for each sensor
-        required_fields = ['sensor_id', 'type', 'value', 'unit']
-        for field in required_fields:
-            if field not in sensor:
-                errors.append(f"Sensor at index {idx} missing required field: '{field}'")
-        
-        # Validate sensor_id
-        if 'sensor_id' in sensor:
-            if not isinstance(sensor['sensor_id'], str):
-                errors.append(f"Sensor at index {idx}: sensor_id must be a string")
-            elif not sensor['sensor_id'].strip():
-                errors.append(f"Sensor at index {idx}: sensor_id cannot be empty")
-        
-        # Validate type
-        if 'type' in sensor:
-            if not isinstance(sensor['type'], str):
-                errors.append(f"Sensor at index {idx}: type must be a string")
+    # Check for required fields
+    for field in required_fields:
+        if field not in sensor_data:
+            errors.append(f"Sensors missing required field: '{field}'")
+    
+    # Define validation rules: (min_value, max_value, description)
+    sensor_validations = {
+        'engine_rpm': (0, 20000, "RPM must be between 0 and 20000"),
+        'throttle_position': (0, 100, "Throttle position must be between 0 and 100 percent"),
+        'brake_pressure': (0, 1200, "Brake pressure must be between 0 and 200 bar/psi"),
+        'coolant_temp': (-50, 150, "Coolant temperature must be between -50 and 150 degrees C"),
+        'oil_pressure': (0, 150, "Oil pressure must be between 0 and 150 psi"),
+        'intake_air_temp': (-50, 150, "Intake air temperature must be between -50 and 150 degrees C"),
+        'battery_voltage': (0, 20, "Battery voltage must be between 0 and 20 volts"),
+        'speed_fl': (0, 200, "Front left wheel speed must be between 0 and 200 mph"),
+        'speed_fr': (0, 200, "Front right wheel speed must be between 0 and 200 mph"),
+        'speed_rl': (0, 200, "Rear left wheel speed must be between 0 and 200 mph"),
+        'speed_rr': (0, 200, "Rear right wheel speed must be between 0 and 200 mph"),
+        'steering_angle': (-540, 540, "Steering angle must be between -540 and 540 degrees"),
+        'accel_lateral': (-5, 5, "Lateral acceleration must be between -5 and 5 g"),
+        'accel_longitudinal': (-5, 5, "Longitudinal acceleration must be between -5 and 5 g")
+    }
+    
+    # Validate each sensor field
+    for field, (min_val, max_val, description) in sensor_validations.items():
+        if field in sensor_data:
+            value = sensor_data[field]
+            
+            # Check if value is numeric
+            if not isinstance(value, (int, float)):
+                errors.append(f"Sensors: {field} must be a number (int or float), got {type(value).__name__}")
             else:
-                valid_types = ['temperature', 'humidity', 'pressure', 'light', 'motion', 'proximity', 'accelerometer', 'gyroscope']
-                if sensor['type'].lower() not in valid_types:
-                    errors.append(f"Sensor at index {idx}: type '{sensor['type']}' is not a recognized sensor type")
-        
-        # Validate value
-        if 'value' in sensor:
-            if not isinstance(sensor['value'], (int, float)):
-                errors.append(f"Sensor at index {idx}: value must be a number (int or float)")
-            else:
-                # Range validation based on sensor type
-                sensor_type = sensor.get('type', '').lower()
-                value = sensor['value']
-                
-                if sensor_type == 'temperature':
-                    if value < -273.15 or value > 1000:  # Celsius, absolute zero to reasonable max
-                        errors.append(f"Sensor at index {idx}: temperature value {value} is out of acceptable range (-273.15 to 1000)")
-                elif sensor_type == 'humidity':
-                    if value < 0 or value > 100:
-                        errors.append(f"Sensor at index {idx}: humidity value {value} is out of acceptable range (0 to 100)")
-                elif sensor_type == 'pressure':
-                    if value < 0 or value > 2000:  # hPa or mbar
-                        errors.append(f"Sensor at index {idx}: pressure value {value} is out of acceptable range (0 to 2000)")
-                elif sensor_type == 'light':
-                    if value < 0:
-                        errors.append(f"Sensor at index {idx}: light value {value} cannot be negative")
-        
-        # Validate unit
-        if 'unit' in sensor:
-            if not isinstance(sensor['unit'], str):
-                errors.append(f"Sensor at index {idx}: unit must be a string")
-        
-        # Validate timestamp if present
-        if 'timestamp' in sensor:
-            is_valid, error_msg = validate_timestamp(sensor['timestamp'])
-            if not is_valid:
-                errors.append(f"Sensor at index {idx}: {error_msg}")
+                # Check range
+                if value < min_val or value > max_val:
+                    errors.append(f"Sensors: {field} value {value} is out of range. {description}")
     
     return len(errors) == 0, errors
 
 
 def validate_metadata(metadata: Any) -> Tuple[bool, List[str]]:
     """
-    Validate metadata fields.
+    Validate telemetry metadata fields.
     
     Args:
         metadata: Metadata dictionary to validate
@@ -145,67 +133,47 @@ def validate_metadata(metadata: Any) -> Tuple[bool, List[str]]:
     
     # Check if metadata exists
     if metadata is None:
-        errors.append("Metadata is missing")
+        errors.append("Telemetry metadata is missing")
         return False, errors
     
     # Check if metadata is a dictionary
     if not isinstance(metadata, dict):
-        errors.append(f"Metadata must be a dictionary, got {type(metadata).__name__}")
+        errors.append(f"Telemetry metadata must be a dictionary, got {type(metadata).__name__}")
         return False, errors
     
     # Required metadata fields
-    required_fields = ['device_id', 'location']
+    required_fields = ['packet_id', 'sample_rate_hz', 'daq_version']
     for field in required_fields:
         if field not in metadata:
-            errors.append(f"Metadata missing required field: '{field}'")
+            errors.append(f"Telemetry metadata missing required field: '{field}'")
     
-    # Validate device_id
-    if 'device_id' in metadata:
-        if not isinstance(metadata['device_id'], str):
-            errors.append("Metadata: device_id must be a string")
-        elif not metadata['device_id'].strip():
-            errors.append("Metadata: device_id cannot be empty")
+    # Validate packet_id
+    if 'packet_id' in metadata:
+        if not isinstance(metadata['packet_id'], str):
+            errors.append("Telemetry metadata: packet_id must be a string")
+        elif not metadata['packet_id'].strip():
+            errors.append("Telemetry metadata: packet_id cannot be empty")
     
-    # Validate location
-    if 'location' in metadata:
-        if not isinstance(metadata['location'], dict):
-            errors.append(f"Metadata: location must be a dictionary, got {type(metadata['location']).__name__}")
-        else:
-            location = metadata['location']
-            
-            # Check for required location fields
-            if 'latitude' not in location:
-                errors.append("Metadata: location missing 'latitude'")
-            elif not isinstance(location['latitude'], (int, float)):
-                errors.append("Metadata: location.latitude must be a number")
-            elif location['latitude'] < -90 or location['latitude'] > 90:
-                errors.append(f"Metadata: location.latitude {location['latitude']} is out of range (-90 to 90)")
-            
-            if 'longitude' not in location:
-                errors.append("Metadata: location missing 'longitude'")
-            elif not isinstance(location['longitude'], (int, float)):
-                errors.append("Metadata: location.longitude must be a number")
-            elif location['longitude'] < -180 or location['longitude'] > 180:
-                errors.append(f"Metadata: location.longitude {location['longitude']} is out of range (-180 to 180)")
+    # Validate sample_rate_hz
+    if 'sample_rate_hz' in metadata:
+        if not isinstance(metadata['sample_rate_hz'], (int, float)):
+            errors.append("Telemetry metadata: sample_rate_hz must be a number")
+        elif metadata['sample_rate_hz'] <= 0:
+            errors.append(f"Telemetry metadata: sample_rate_hz must be positive, got {metadata['sample_rate_hz']}")
+        elif metadata['sample_rate_hz'] > 10000:
+            errors.append(f"Telemetry metadata: sample_rate_hz {metadata['sample_rate_hz']} exceeds maximum (10000 Hz)")
     
-    # Validate firmware_version if present
-    if 'firmware_version' in metadata:
-        if not isinstance(metadata['firmware_version'], str):
-            errors.append("Metadata: firmware_version must be a string")
-    
-    # Validate battery_level if present
-    if 'battery_level' in metadata:
-        if not isinstance(metadata['battery_level'], (int, float)):
-            errors.append("Metadata: battery_level must be a number")
-        elif metadata['battery_level'] < 0 or metadata['battery_level'] > 100:
-            errors.append(f"Metadata: battery_level {metadata['battery_level']} is out of range (0 to 100)")
+    # Validate daq_version
+    if 'daq_version' in metadata:
+        if not isinstance(metadata['daq_version'], str):
+            errors.append("Telemetry metadata: daq_version must be a string")
     
     return len(errors) == 0, errors
 
 
 def validate_payload(json_data: Any) -> Tuple[bool, List[str]]:
     """
-    Validate complete payload structure.
+    Validate complete FSAE telemetry payload structure.
     
     Args:
         json_data: JSON payload to validate (can be dict or JSON string)
@@ -229,7 +197,7 @@ def validate_payload(json_data: Any) -> Tuple[bool, List[str]]:
         return False, errors
     
     # Check for required top-level fields
-    required_fields = ['timestamp', 'sensors', 'metadata']
+    required_fields = ['timestamp', 'session_id', 'vehicle_id', 'sensors', 'telemetry_metadata']
     for field in required_fields:
         if field not in data:
             errors.append(f"Payload missing required field: '{field}'")
@@ -240,14 +208,28 @@ def validate_payload(json_data: Any) -> Tuple[bool, List[str]]:
         if not is_valid:
             errors.append(f"Payload: {error_msg}")
     
+    # Validate session_id
+    if 'session_id' in data:
+        if not isinstance(data['session_id'], str):
+            errors.append("Payload: session_id must be a string")
+        elif not data['session_id'].strip():
+            errors.append("Payload: session_id cannot be empty")
+    
+    # Validate vehicle_id
+    if 'vehicle_id' in data:
+        if not isinstance(data['vehicle_id'], str):
+            errors.append("Payload: vehicle_id must be a string")
+        elif not data['vehicle_id'].strip():
+            errors.append("Payload: vehicle_id cannot be empty")
+    
     # Validate sensors
     if 'sensors' in data:
         is_valid, sensor_errors = validate_sensors(data['sensors'])
         errors.extend(sensor_errors)
     
-    # Validate metadata
-    if 'metadata' in data:
-        is_valid, metadata_errors = validate_metadata(data['metadata'])
+    # Validate telemetry_metadata
+    if 'telemetry_metadata' in data:
+        is_valid, metadata_errors = validate_metadata(data['telemetry_metadata'])
         errors.extend(metadata_errors)
     
     return len(errors) == 0, errors
@@ -275,5 +257,5 @@ def validate_payload_strict(json_data: Any) -> Dict[str, Any]:
     return {
         "valid": True,
         "errors": [],
-        "message": "Payload validation successful"
+        "message": "FSAE telemetry payload validation successful"
     }
