@@ -87,20 +87,20 @@ def validate_sensors(sensor_data: Any) -> Tuple[bool, List[str]]:
     
     # Define validation rules: (min_value, max_value, description)
     sensor_validations = {
-        'engine_rpm': (0, 20000, "RPM must be between 0 and 20000"),
+        'engine_rpm': (0, 14000, "RPM must be between 0 and 14000"),
         'throttle_position': (0, 100, "Throttle position must be between 0 and 100 percent"),
-        'brake_pressure': (0, 1200, "Brake pressure must be between 0 and 200 bar/psi"),
-        'coolant_temp': (-50, 150, "Coolant temperature must be between -50 and 150 degrees C"),
-        'oil_pressure': (0, 150, "Oil pressure must be between 0 and 150 psi"),
-        'intake_air_temp': (-50, 150, "Intake air temperature must be between -50 and 150 degrees C"),
-        'battery_voltage': (0, 20, "Battery voltage must be between 0 and 20 volts"),
-        'speed_fl': (0, 200, "Front left wheel speed must be between 0 and 200 mph"),
-        'speed_fr': (0, 200, "Front right wheel speed must be between 0 and 200 mph"),
-        'speed_rl': (0, 200, "Rear left wheel speed must be between 0 and 200 mph"),
-        'speed_rr': (0, 200, "Rear right wheel speed must be between 0 and 200 mph"),
+        'brake_pressure': (0, 2000, "Brake pressure must be between 0 and 2000 bar/psi"),
+        'coolant_temp': (20, 120, "Coolant temperature must be between 20 and 120 degrees C"),
+        'oil_pressure': (0, 100, "Oil pressure must be between 0 and 100 psi"),
+        'intake_air_temp': (-10, 80, "Intake air temperature must be between -10 and 80 degrees C"),
+        'battery_voltage': (10, 15, "Battery voltage must be between 10 and 15 volts"),
+        'speed_fl': (0, 45, "Front left wheel speed must be between 0 and 45 mph"),
+        'speed_fr': (0, 45, "Front right wheel speed must be between 0 and 45 mph"),
+        'speed_rl': (0, 45, "Rear left wheel speed must be between 0 and 45 mph"),
+        'speed_rr': (0, 45, "Rear right wheel speed must be between 0 and 45 mph"),
         'steering_angle': (-540, 540, "Steering angle must be between -540 and 540 degrees"),
-        'accel_lateral': (-5, 5, "Lateral acceleration must be between -5 and 5 g"),
-        'accel_longitudinal': (-5, 5, "Longitudinal acceleration must be between -5 and 5 g")
+        'accel_lateral': (-3, 3, "Lateral acceleration must be between -3 and 3 g"),
+        'accel_longitudinal': (-3, 3, "Longitudinal acceleration must be between -3 and 3 g")
     }
     
     # Validate each sensor field
@@ -239,14 +239,6 @@ def validate_payload_strict(json_data: Any) -> Dict[str, Any]:
     """
     Validate payload and raise ValidationError if invalid.
     
-    Args:
-        json_data: JSON payload to validate
-        
-    Returns:
-        Dictionary containing validation results
-        
-    Raises:
-        ValidationError: If validation fails
     """
     is_valid, errors = validate_payload(json_data)
     
