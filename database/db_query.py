@@ -4,12 +4,12 @@ from psycopg import sql
 from datetime import datetime
 # import logging
 
-def get_by_time_range(conn, start_time, end_time, table_name='data'):
+def get_by_time_range(conn, start_time, end_time, table_name='sensor_readings'): #defaults to using 'sensor_readings' table
     query = sql.SQL("SELECT * FROM {} WHERE timestamp >= %s AND timestamp <= %s;").format(sql.Identifier(table_name))
 
     try:
         with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(query, (start_time, end_time))
+            cur.execute(query, (start_time, end_time)) #execute expects tuple/list
             times_result = cur.fetchall()
             return times_result
     except Exception as e:
@@ -17,12 +17,12 @@ def get_by_time_range(conn, start_time, end_time, table_name='data'):
         return None
 
 
-def get_sensor_reading(conn, sensor_name, timestamp, table_name='data'):
+def get_sensor_reading(conn, sensor_name, timestamp, table_name='sensor_readings'):
     query = sql.SQL("SELECT value FROM {} WHERE sensor_name = %s AND timestamp = %s;").format(sql.Identifier(table_name))
     
     try:
         with conn.cursor(row_factory=dict_row) as cur:
-            cur.execute(query, (sensor_name, timestamp)) #execute expects tuple/list
+            cur.execute(query, (sensor_name, timestamp)) 
             sensor_result = cur.fetchone() 
 
             if sensor_result:
@@ -33,7 +33,7 @@ def get_sensor_reading(conn, sensor_name, timestamp, table_name='data'):
         print(f"Error in get_sensor_reading(): {e}")
         return None
 
-def verify_insertion(conn, timestamp, table_name='data'):
+def verify_insertion(conn, timestamp, table_name='sensor_readings'): 
     query = sql.SQL("SELECT 1 FROM {} WHERE timestamp = %s;").format(sql.Identifier(table_name))
 
     try:
@@ -45,7 +45,7 @@ def verify_insertion(conn, timestamp, table_name='data'):
         print(f"Error in verify_insertion(): {e}")
         return False
 
-def count_records(conn, table_name='data'):
+def count_records(conn, table_name='sensor_readings'):
     query = sql.SQL("SELECT COUNT(*) as total from {};").format(sql.Identifier(table_name))
 
     try:
