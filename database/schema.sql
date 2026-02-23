@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS sensor_readings (
     timestamp TIMESTAMPTZ NOT NULL,
     packet_id TEXT NOT NULL,
     sensor_name TEXT NOT NULL,
-    reading_value FLOAT, 
+    value FLOAT, 
 
     CONSTRAINT fk_packet_id FOREIGN KEY (packet_id) REFERENCES packets (packet_id),
     CONSTRAINT fk_sensor_registry FOREIGN KEY (sensor_name) REFERENCES sensor_registry (sensor_name)
