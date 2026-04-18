@@ -10,6 +10,33 @@ services:
       - "5432:5432"
     volumes:
       - timescale_data:/var/lib/postgresql/data
+    networks:
+      - fsae-network
+
+  fastapi:
+    image: python:3.13-slim
+    container_name: lsu-fsae-fastapi
+    working_dir: /app
+    volumes:
+      - ./app:/app
+      - ./dashboard:/dashboard
+      - ./database:/database
+      - ./parser:/parser
+    command: >
+      sh -c "pip install --no-cache-dir -r requirements.txt &&
+             uvicorn main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://fsae:fsae2026@timescaledb:5432/daq_data
+    depends_on:
+      - timescaledb
+    networks:
+      - fsae-network
+
+networks:
+  fsae-network:
+    driver: bridge
 
 volumes:
   timescale_data:
